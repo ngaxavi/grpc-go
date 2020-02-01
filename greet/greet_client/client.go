@@ -1,8 +1,8 @@
 package main
 
 import (
-	"../greetpb"
 	"fmt"
+	"github.com/ngaxavi/grpc-go/greet/greetpb"
 	"google.golang.org/grpc"
 	"log"
 )
