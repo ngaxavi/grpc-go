@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ngaxavi/grpc-go/calculator/calculatorpb"
 	"google.golang.org/grpc"
+	"io"
 	"log"
 )
 
@@ -21,7 +22,8 @@ func main() {
 
 	fmt.Println("Client has been created")
 
-	calculateSum(serviceClient)
+	//calculateSum(serviceClient)
+	primeNumberDecomposition(serviceClient)
 }
 
 func calculateSum(serviceClient calculatorpb.SumServiceClient)  {
@@ -36,4 +38,28 @@ func calculateSum(serviceClient calculatorpb.SumServiceClient)  {
 	}
 
 	log.Printf("%v + %v = %v", req.GetX(), req.GetY(), res.Sum)
+}
+
+func primeNumberDecomposition(serviceClient calculatorpb.SumServiceClient) {
+	req := &calculatorpb.PNDRequest{
+		Number: 120,
+	}
+
+	res, err := serviceClient.PrimeNumberDecomposition(context.Background(), req)
+
+	if err!= nil {
+		log.Fatalf("Error while calling Prime Number Decompostion RPC: %v", err)
+	}
+
+	for {
+		msg, err := res.Recv()
+		if  err == io.EOF {
+			// we've reached the end of the stream
+			break
+		}
+		if err != nil {
+			log.Fatalf("Error while reading stream: %v", err)
+		}
+		log.Printf("%v", msg.GetPrime())
+	}
 }

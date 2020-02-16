@@ -12,7 +12,18 @@ message SumResponse {
     int32 sum = 1;
 }
 
+message PNDRequest {
+    int32 number = 1;
+}
+
+message PNDResponse {
+    int32 prime = 1;
+}
+
 service SumService {
     // Unary
-    rpc Sum(SumRequest) returns (SumResponse) {}
+    rpc Sum(SumRequest) returns (SumResponse) {};
+
+    // server streaming
+    rpc PrimeNumberDecomposition(PNDRequest) returns(stream PNDResponse) {};
 }
