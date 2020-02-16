@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/ngaxavi/grpc-go/calculator/calculatorpb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
 	"time"
@@ -28,7 +30,9 @@ func main() {
 
 	//computeAverage(serviceClient)
 
-	findMaximum(serviceClient)
+	// findMaximum(serviceClient)
+
+	doErrorUnary(serviceClient)
 }
 
 func calculateSum(serviceClient calculatorpb.SumServiceClient)  {
@@ -146,5 +150,36 @@ func findMaximum(serviceClient calculatorpb.SumServiceClient)  {
 
 	// block until everything is done
 	<-waitc
+}
 
+func doErrorUnary(serviceClient calculatorpb.SumServiceClient) {
+	fmt.Println("Starting to do a SquareRoot Unary RPC...")
+
+	// correct call
+	errorCall(serviceClient, 10)
+
+	// wrong call
+	errorCall(serviceClient, -2)
+
+}
+
+func errorCall(serviceClient calculatorpb.SumServiceClient, number int32) {
+	res, err := serviceClient.SquareRoot(context.Background(), &calculatorpb.NumberRequest{Number: number})
+
+	if  err != nil {
+		respErr, ok := status.FromError(err)
+		if ok {
+			// actula error from gRPC (user error)
+			fmt.Println(respErr.Message())
+			fmt.Println(respErr.Code())
+			if respErr.Code() == codes.InvalidArgument {
+				fmt.Println("We probably sent a negative number!")
+				return
+			}
+		} else {
+			log.Fatalf("Big error calling SquareRoot: %v\n", err)
+			return
+		}
+	}
+	fmt.Printf("Square root of %v: %v\n", number, res.GetRoot())
 }

@@ -32,6 +32,10 @@ message MaximumResponse {
     int32 max = 1;
 }
 
+message SquareRootResponse {
+    double root = 1;
+}
+
 service SumService {
     // Unary
     rpc Sum(SumRequest) returns (SumResponse) {};
@@ -44,4 +48,9 @@ service SumService {
 
     // bidi streaming
     rpc FindMaximum(stream NumberRequest) returns (stream MaximumResponse) {};
+
+    // Error Handling
+    // This RPC will throw an exception if the sent number is negative
+    // the error being sent is of type INVALID_ARGUMENT
+    rpc SquareRoot(NumberRequest) returns (SquareRootResponse) {};
 }
