@@ -26,7 +26,9 @@ func main() {
 	//calculateSum(serviceClient)
 	//primeNumberDecomposition(serviceClient)
 
-	computeAverage(serviceClient)
+	//computeAverage(serviceClient)
+
+	findMaximum(serviceClient)
 }
 
 func calculateSum(serviceClient calculatorpb.SumServiceClient)  {
@@ -101,4 +103,48 @@ func computeAverage(serviceClient calculatorpb.SumServiceClient) {
 		log.Fatalf("Error while receiving response from ComputeAverage: %v", err)
 	}
 	fmt.Printf("Compute Average: %v\n", res.GetAverage())
+}
+
+func findMaximum(serviceClient calculatorpb.SumServiceClient)  {
+	fmt.Println("Streaming to do a bidirectional streaming RPC...")
+
+	stream, err := serviceClient.FindMaximum(context.Background())
+	if err != nil {
+		log.Fatalf("Error while creating stream: %v", err)
+		return
+	}
+
+	waitc := make(chan struct{})
+
+	// we send a bunch of messages to the client ( go routine)
+	go func() {
+		numbers := []int32{1, 5, 3, 6, 2, 20}
+		for _, number := range numbers {
+			stream.Send(&calculatorpb.NumberRequest{
+				Number: number,
+			})
+			time.Sleep(1000 * time.Millisecond)
+		}
+		stream.CloseSend()
+	}()
+
+	// we receive a bunch of messages to the server
+	go func() {
+		for {
+			res, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatalf("Error while receiving: %v", err)
+				break
+			}
+			fmt.Printf("Received: %v\n", res.GetMax())
+		}
+		close(waitc)
+	}()
+
+	// block until everything is done
+	<-waitc
+
 }
