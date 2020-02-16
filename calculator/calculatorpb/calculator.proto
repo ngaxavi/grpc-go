@@ -13,11 +13,19 @@ message SumResponse {
 }
 
 message PNDRequest {
-    int32 number = 1;
+    int64 number = 1;
 }
 
 message PNDResponse {
-    int32 prime = 1;
+    int64 prime = 1;
+}
+
+message NumberRequest {
+    int32 number = 1;
+}
+
+message AverageResponse {
+    double average = 1;
 }
 
 service SumService {
@@ -26,4 +34,7 @@ service SumService {
 
     // server streaming
     rpc PrimeNumberDecomposition(PNDRequest) returns(stream PNDResponse) {};
+
+    // client streaming
+    rpc ComputeAverage(stream NumberRequest) returns (AverageResponse) {};
 }

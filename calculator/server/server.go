@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/ngaxavi/grpc-go/calculator/calculatorpb"
 	"google.golang.org/grpc"
+	"io"
 	"log"
 	"net"
 )
@@ -24,10 +25,9 @@ func (*server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculat
 func (*server) PrimeNumberDecomposition(req *calculatorpb.PNDRequest, stream calculatorpb.SumService_PrimeNumberDecompositionServer) error {
 	fmt.Printf("Prime Number Decomposition function was invoked with %v\n", req)
 	number := req.GetNumber()
-	var k int32
-	k = 2
+	k := int64(2)
 	for number > 1 {
-		if number % k == 0 {
+		if number%k == 0 {
 			res := &calculatorpb.PNDResponse{
 				Prime: k,
 			}
@@ -38,6 +38,26 @@ func (*server) PrimeNumberDecomposition(req *calculatorpb.PNDRequest, stream cal
 		}
 	}
 	return nil
+}
+
+func (*server) ComputeAverage(stream calculatorpb.SumService_ComputeAverageServer) error {
+	fmt.Println("Compute average function was invoked with a streaming request")
+	counter := 0
+	sum := int32(0)
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			// we have finished reading the client stream
+			return stream.SendAndClose(&calculatorpb.AverageResponse{
+				Average: float64(sum) / float64(counter),
+			})
+		}
+		if err != nil {
+			log.Fatalf("Error while reading client stream: %v", err)
+		}
+		sum += req.GetNumber()
+		counter++
+	}
 }
 
 func main() {
